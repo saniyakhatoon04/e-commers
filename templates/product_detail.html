@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ product.name }} - ApexMart
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 1.5rem;">
+
+    <!-- Breadcrumb -->
+    <nav style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+        <a href="{{ url_for('index') }}" style="color: var(--text-main); font-weight: 500;">Home</a>
+        <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+        <a href="{{ url_for('products', category=product.category_slug) }}" style="color: var(--text-main); font-weight: 500;">{{ product.category_name }}</a>
+        <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+        <span style="color: var(--text-muted); max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ product.name }}</span>
+    </nav>
+
+    <!-- Main Product Showcase Card -->
+    <div class="product-detail-card">
+        
+        <!-- Left: Image Gallery Showcase -->
+        <div class="detail-gallery">
+            {% set gallery = product.gallery_urls|from_json %}
+            {% if gallery|length > 1 %}
+            <div class="thumbnails-column">
+                {% for img in gallery %}
+                <div class="thumb-item detail-thumb {{ 'active' if loop.first else '' }}" data-full-img="{{ img }}">
+                    <img src="{{ img }}" alt="Thumbnail {{ loop.index }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="main-image-display">
+                <img id="detail-main-image" src="{{ product.image_url }}" alt="{{ product.name }}">
+            </div>
+        </div>
+
+        <!-- Right: Product Information & Purchase Controls -->
+        <div class="detail-info">
+            <span class="detail-brand-badge">{{ product.category_name }}</span>
+            <h1 class="detail-title">{{ product.name }}</h1>
+
+            <!-- Ratings -->
+            <div class="detail-rating-block">
+                <div class="detail-rating-pill">
+                    {{ product.rating }} <i class="fa-solid fa-star"></i>
+                </div>
+                <a href="#reviews-section" class="detail-reviews-link" onclick="document.querySelector('[data-target=\'tab-reviews\']').click()">
+                    {{ product.review_count }} Customer Reviews & Ratings
+                </a>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="detail-price-box">
+                <div class="detail-price-row">
+                    <span class="detail-current-price">{{ product.price|currency }}</span>
+                    {% if product.original_price and product.original_price > product.price %}
+                        <span class="detail-original-price">{{ product.original_price|currency }}</span>
+                        <span class="detail-discount-tag">{{ product.discount_percent }}% OFF</span>
+                    {% endif %}
+                </div>
+                <div class="tax-inclusive">Inclusive of all taxes • Free Shipping available</div>
+            </div>
+
+            <!-- Description summary -->
+            <p style="font-size: 0.95rem; color: #4b5563; line-height: 1.6; margin-bottom: 1.5rem;">
+                {{ product.description }}
+            </p>
+
+            <!-- Color Options Picker -->
+            {% set colors = product.colors|from_json %}
+            {% if colors %}
+            <div class="selector-group">
+                <div class="selector-label">
+                    Color: <span id="selected-color-label" class="selector-selected-val">{{ colors[0].name }}</span>
+                </div>
+                <div class="color-options-picker">
+                    {% for c in colors %}
+                    <button type="button" 
+                            class="color-option-btn detail-color-btn {{ 'active' if loop.first else '' }}" 
+                            style="background-color: {{ c.hex }};" 
+                            data-color="{{ c.name }}"
+                            title="{{ c.name }}">
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Size / Variation Options Picker -->
+            {% set sizes = product.sizes|from_json %}
+            {% if sizes %}
+            <div class="selector-group">
+                <div class="selector-label">
+                    Select Option / Size: <span id="selected-size-label" class="selector-selected-val">{{ sizes[0] }}</span>
+                </div>
+                <div class="size-options-picker">
+                    {% for s in sizes %}
+                    <button type="button" 
+                            class="size-pill-btn detail-size-btn {{ 'active' if loop.first else '' }}" 
+                            data-size="{{ s }}">
+                        {{ s }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quantity Stepper -->
+            <div class="quantity-row">
+                <span style="font-weight: 700; font-size: 0.95rem;">Quantity:</span>
+                <div class="stepper-box quantity-stepper-component">
+                    <button class="stepper-btn btn-qty-minus">-</button>
+                    <input type="text" id="detail-qty-input" class="stepper-input input-qty-val" value="1" readonly>
+                    <button class="stepper-btn btn-qty-plus">+</button>
+                </div>
+                <span class="stock-status"><i class="fa-solid fa-circle-check"></i> In Stock ({{ product.stock }} units left)</span>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="detail-cta-row">
+                <button class="btn-large-cart" onclick="submitDetailPageCart(false)">
+                    <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                </button>
+                <button class="btn-large-buy" onclick="submitDetailPageCart(true)">
+                    <i class="fa-solid fa-bolt"></i> Buy Now
+                </button>
+                <button class="btn-detail-wishlist {{ 'active' if product.id in session_wishlist else '' }}" 
+                        onclick="toggleWishlist({{ product.id }}, this)" 
+                        title="Add to Wishlist">
+                    <i class="fa-{{ 'solid' if product.id in session_wishlist else 'regular' }} fa-heart"></i>
+                </button>
+            </div>
+
+            <!-- Perks Strip -->
+            <div class="detail-perks-list">
+                <div class="perk-item">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    <span>Fast Delivery (2-4 business days)</span>
+                </div>
+                <div class="perk-item">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>30-Day Hassle-Free Returns</span>
+                </div>
+                <div class="perk-item">
+                    <i class="fa-solid fa-award"></i>
+                    <span>1-Year Official Warranty</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Detailed Tabs & Reviews Section -->
+    <div class="product-tabs-container" id="reviews-section">
+        <div class="tabs-nav">
+            <button class="tab-nav-btn active" data-target="tab-features">Key Features & Specs</button>
+            <button class="tab-nav-btn" data-target="tab-reviews">Customer Reviews ({{ reviews|length }})</button>
+        </div>
+
+        <!-- Tab 1: Key Features -->
+        <div id="tab-features" class="tab-content-pane active">
+            <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.25rem;">Highlighted Features & Specifications</h3>
+            {% set features = product.features|from_json %}
+            {% if features %}
+                <ul class="features-bullet-list">
+                    {% for feat in features %}
+                    <li><i class="fa-solid fa-circle-check"></i> <span>{{ feat }}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>{{ product.description }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Tab 2: Reviews & Ratings -->
+        <div id="tab-reviews" class="tab-content-pane">
+            <div class="reviews-breakdown-grid">
+                <!-- Overview Card -->
+                <div class="rating-overview-card">
+                    <div class="overall-score">{{ product.rating }}</div>
+                    <div class="overall-stars">
+                        {% for i in range(1, 6) %}
+                            <i class="fa-{{ 'solid' if i <= product.rating|int else 'regular' }} fa-star"></i>
+                        {% endfor %}
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">
+                        Based on {{ product.review_count }} ratings
+                    </div>
+                </div>
+
+                <!-- Add Review Form -->
+                <div class="review-form-card">
+                    <h4>Write a Customer Review</h4>
+                    <form id="product-review-form" data-product-id="{{ product.id }}">
+                        <div class="form-group">
+                            <label>Overall Rating</label>
+                            <div class="star-rating-select" id="interactive-star-rating">
+                                <i class="fa-solid fa-star selected" data-rating="1"></i>
+                                <i class="fa-solid fa-star selected" data-rating="2"></i>
+                                <i class="fa-solid fa-star selected" data-rating="3"></i>
+                                <i class="fa-solid fa-star selected" data-rating="4"></i>
+                                <i class="fa-solid fa-star selected" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="review-rating-value" value="5">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="review-author-name">Your Name *</label>
+                                <input type="text" id="review-author-name" class="form-control" placeholder="e.g. Alex M." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="review-title-input">Headline / Title</label>
+                                <input type="text" id="review-title-input" class="form-control" placeholder="e.g. Magnificent sound quality!">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="review-comment-input">Written Review *</label>
+                            <textarea id="review-comment-input" class="form-control" placeholder="What did you like or dislike? How was the performance and quality?" required></textarea>
+                        </div>
+
+                        <button type="submit" class="hero-btn" style="border: none; cursor: pointer; padding: 0.75rem 1.75rem;">
+                            Submit Review
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Customer Reviews List -->
+            <div class="reviews-list" id="customer-reviews-container">
+                {% if reviews %}
+                    {% for r in reviews %}
+                    <div class="review-item-card">
+                        <div class="review-header">
+                            <div class="reviewer-meta">
+                                <div class="reviewer-avatar">{{ r.author_name[:1]|upper }}</div>
+                                <div>
+                                    <div class="reviewer-name">{{ r.author_name }}</div>
+                                    {% if r.verified_purchase %}
+                                        <span class="verified-badge"><i class="fa-solid fa-circle-check"></i> Verified Purchase</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="review-stars">
+                                {% for i in range(1, 6) %}
+                                    <i class="fa-{{ 'solid' if i <= r.rating else 'regular' }} fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if r.title %}
+                            <div class="review-title">{{ r.title }}</div>
+                        {% endif %}
+                        <div class="review-comment">{{ r.comment }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No reviews yet. Be the first to review this product!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div style="margin-bottom: 3.5rem;">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-fire"></i> Similar Products You May Like</h2>
+            <a href="{{ url_for('products', category=product.category_slug) }}" style="color: var(--primary-color); font-weight: 700; font-size: 0.9rem;">View More in {{ product.category_name }} →</a>
+        </div>
+        <div class="products-grid">
+            {% for p in related_products %}
+            <div class="product-card">
+                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-card-media">
+                    <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+                </a>
+                <div class="product-card-body">
+                    <span class="product-category-tag">{{ p.category_name }}</span>
+                    <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-title">{{ p.name }}</a>
+                    <div class="product-rating-row">
+                        <span class="rating-badge">{{ p.rating }} <i class="fa-solid fa-star"></i></span>
+                        <span class="rating-count">({{ p.review_count }})</span>
+                    </div>
+                    <div class="product-price-row">
+                        <span class="current-price">{{ p.price|currency }}</span>
+                        {% if p.original_price and p.original_price > p.price %}
+                            <span class="original-price">{{ p.original_price|currency }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="product-card-actions">
+                        <button class="btn-add-cart" onclick="addToCart({{ p.id }}, 1, '', '', true)">
+                            <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                        </button>
+                        <button class="btn-buy-now" onclick="buyNow({{ p.id }}, 1, '', '')">
+                            <i class="fa-solid fa-bolt"></i> Buy Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% block extra_scripts %}
+<script>
+function submitDetailPageCart(isBuyNow) {
+    const size = document.getElementById('selected-size-label')?.textContent || '';
+    const color = document.getElementById('selected-color-label')?.textContent || '';
+    const qty = parseInt(document.getElementById('detail-qty-input')?.value) || 1;
+    const productId = {{ product.id }};
+
+    if (isBuyNow) {
+        buyNow(productId, qty, size, color);
+    } else {
+        addToCart(productId, qty, size, color, true);
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

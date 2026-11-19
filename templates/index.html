@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    ApexMart - Online Shopping for Electronics, Fashion, Footwear & Home
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    {% if not is_catalog and not search_query and (not current_category or current_category == 'all') %}
+    <!-- ==================== HERO PROMOTIONAL BANNER SLIDER ==================== -->
+    <section class="hero-slider-section">
+        <div class="hero-slider">
+            <!-- Slide 1: Electronics -->
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1600&q=80');">
+                <div class="hero-slide-overlay"></div>
+                <div class="hero-slide-content">
+                    <span class="hero-pill">⚡ Limited Time Offer</span>
+                    <h1 class="hero-title">Experience Sound<br>Engineered to Perfection</h1>
+                    <p class="hero-subtitle">Industry-leading noise cancellation, crystal audio, and 30-hour battery life. Starting at $348.</p>
+                    <a href="{{ url_for('product_detail', product_id=1) }}" class="hero-btn">
+                        <i class="fa-solid fa-cart-shopping"></i> Shop Sony XM5 Now
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 2: Fashion -->
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1445205170230-053b83016050?w=1600&q=80');">
+                <div class="hero-slide-overlay"></div>
+                <div class="hero-slide-content">
+                    <span class="hero-pill" style="background: #10b981;">New Season Arrivals</span>
+                    <h1 class="hero-title">Elevate Your Everyday<br>Autumn & Winter Style</h1>
+                    <p class="hero-subtitle">Discover handcrafted cotton oxford shirts, cashmere sweaters, and vintage denim up to 40% off.</p>
+                    <a href="{{ url_for('products', category='fashion') }}" class="hero-btn">
+                        <i class="fa-solid fa-shirt"></i> Explore Fashion
+                    </a>
+                </div>
+            </div>
+
+            <!-- Slide 3: Footwear -->
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1600&q=80');">
+                <div class="hero-slide-overlay"></div>
+                <div class="hero-slide-content">
+                    <span class="hero-pill" style="background: #ef4444;">Hot Sneakers Drop</span>
+                    <h1 class="hero-title">Nike Air Max 270<br>Defy Gravity & Limits</h1>
+                    <p class="hero-subtitle">Plush dual-density foam with the largest heel Air unit. Step into ultimate comfort.</p>
+                    <a href="{{ url_for('product_detail', product_id=8) }}" class="hero-btn">
+                        <i class="fa-solid fa-bolt"></i> Buy Now for $159.99
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carousel Navigation Controls -->
+        <button class="slider-arrow prev" title="Previous Slide"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="slider-arrow next" title="Next Slide"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="slider-dots">
+            <span class="slider-dot active"></span>
+            <span class="slider-dot"></span>
+            <span class="slider-dot"></span>
+        </div>
+    </section>
+
+    <!-- ==================== VALUE PROPOSITIONS BAR ==================== -->
+    <div class="value-props-bar">
+        <div class="value-prop-item">
+            <div class="value-prop-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <div>
+                <div class="value-prop-title">Free Worldwide Shipping</div>
+                <div class="value-prop-desc">On all qualifying orders over $50</div>
+            </div>
+        </div>
+        <div class="value-prop-item">
+            <div class="value-prop-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <div class="value-prop-title">100% Secure Checkout</div>
+                <div class="value-prop-desc">256-bit encrypted card & UPI payments</div>
+            </div>
+        </div>
+        <div class="value-prop-item">
+            <div class="value-prop-icon"><i class="fa-solid fa-rotate-left"></i></div>
+            <div>
+                <div class="value-prop-title">30-Day Easy Returns</div>
+                <div class="value-prop-desc">Hassle-free money-back guarantee</div>
+            </div>
+        </div>
+        <div class="value-prop-item">
+            <div class="value-prop-icon"><i class="fa-solid fa-headset"></i></div>
+            <div>
+                <div class="value-prop-title">24/7 Priority Support</div>
+                <div class="value-prop-desc">Live agent chat and assistance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CATEGORY STRIP ==================== -->
+    <section class="category-strip">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa-solid fa-layer-group"></i> Shop by Category</h2>
+            <a href="{{ url_for('products') }}" style="color: var(--primary-color); font-weight: 700; font-size: 0.9rem;">View All →</a>
+        </div>
+        <div class="category-grid">
+            {% for cat in categories %}
+            <a href="{{ url_for('products', category=cat.slug) }}" class="category-card">
+                <div class="category-icon-box">
+                    <i class="fa-solid {{ cat.icon }}"></i>
+                </div>
+                <div class="category-card-name">{{ cat.name }}</div>
+                <div class="category-card-count">Explore Products</div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ==================== CATALOG & FILTERS SECTION ==================== -->
+    <div class="catalog-layout" style="margin-top: {% if is_catalog or search_query %}1.5rem{% else %}0{% endif %};">
+        
+        <!-- Left Filter Sidebar -->
+        <aside class="filters-sidebar">
+            <div class="filter-header">
+                <div class="filter-title"><i class="fa-solid fa-sliders"></i> Filters</div>
+                <a href="{{ url_for('products') }}" class="filter-clear-btn">Reset All</a>
+            </div>
+
+            <form action="{{ url_for('products') }}" method="GET" id="catalog-filters-form">
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+
+                <!-- Department / Category Filter -->
+                <div class="filter-group">
+                    <div class="filter-group-title">Category</div>
+                    <div class="filter-options-list">
+                        <label class="filter-radio-label">
+                            <input type="radio" name="category" value="all" 
+                                   {{ 'checked' if not current_category or current_category == 'all' else '' }}
+                                   onchange="this.form.submit()">
+                            <span>All Departments</span>
+                        </label>
+                        {% for cat in all_categories %}
+                            <label class="filter-radio-label">
+                                <input type="radio" name="category" value="{{ cat.slug }}"
+                                       {{ 'checked' if current_category == cat.slug else '' }}
+                                       onchange="this.form.submit()">
+                                <span>{{ cat.name }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Price Range Filter -->
+                <div class="filter-group">
+                    <div class="filter-group-title">Price Range</div>
+                    <div class="price-slider-inputs">
+                        <input type="number" name="min_price" class="price-input" placeholder="Min $" value="{{ min_price|default('') }}" min="0">
+                        <span style="color: var(--text-muted);">-</span>
+                        <input type="number" name="max_price" class="price-input" placeholder="Max $" value="{{ max_price|default('') }}" min="0">
+                    </div>
+                    <button type="submit" class="filter-btn-apply">Apply Price</button>
+                </div>
+
+                <!-- Rating Filter -->
+                <div class="filter-group">
+                    <div class="filter-group-title">Customer Rating</div>
+                    <div class="filter-options-list">
+                        <label class="filter-radio-label rating-filter-item">
+                            <input type="radio" name="min_rating" value="4.5" {{ 'checked' if min_rating == '4.5' else '' }} onchange="this.form.submit()">
+                            <span class="stars-rating">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                            </span>
+                            <span>4.5 & Above</span>
+                        </label>
+                        <label class="filter-radio-label rating-filter-item">
+                            <input type="radio" name="min_rating" value="4.0" {{ 'checked' if min_rating == '4.0' else '' }} onchange="this.form.submit()">
+                            <span class="stars-rating">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
+                            </span>
+                            <span>4.0 & Above</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort Order Hidden Carry -->
+                <input type="hidden" name="sort" id="sidebar-sort-hidden" value="{{ current_sort|default('featured') }}">
+            </form>
+        </aside>
+
+        <!-- Right Product Grid Area -->
+        <section class="catalog-content">
+            <!-- Catalog Header with Sort Dropdown -->
+            <div class="catalog-content-header">
+                <div class="results-count">
+                    Showing <strong>{{ products|length }}</strong> products
+                    {% if search_query %} for "<strong>{{ search_query }}</strong>"{% endif %}
+                    {% if current_category and current_category != 'all' %} in <strong>{{ current_category|title }}</strong>{% endif %}
+                </div>
+
+                <div class="sort-wrapper">
+                    <label class="sort-label" for="catalog-sort-select">Sort By:</label>
+                    <select id="catalog-sort-select" class="sort-select" onchange="applySort(this.value)">
+                        <option value="featured" {{ 'selected' if current_sort == 'featured' else '' }}>Featured & Best Sellers</option>
+                        <option value="price_low" {{ 'selected' if current_sort == 'price_low' else '' }}>Price: Low to High</option>
+                        <option value="price_high" {{ 'selected' if current_sort == 'price_high' else '' }}>Price: High to Low</option>
+                        <option value="rating" {{ 'selected' if current_sort == 'rating' else '' }}>Highest Customer Rating</option>
+                        <option value="discount" {{ 'selected' if current_sort == 'discount' else '' }}>Biggest Discount %</option>
+                        <option value="newest" {{ 'selected' if current_sort == 'newest' else '' }}>Newest Arrivals</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Product Cards Grid -->
+            {% if products %}
+            <div class="products-grid">
+                {% for p in products %}
+                <div class="product-card" data-product-id="{{ p.id }}">
+                    <!-- Top Badges -->
+                    <div class="card-badges">
+                        {% if p.discount_percent and p.discount_percent > 0 %}
+                            <span class="badge-discount">{{ p.discount_percent }}% OFF</span>
+                        {% endif %}
+                        {% if p.is_bestseller %}
+                            <span class="badge-bestseller">BESTSELLER</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Actions (Wishlist & Quick View) -->
+                    <div class="card-quick-actions">
+                        <button class="quick-action-btn {{ 'active-wishlist' if p.id in session_wishlist else '' }}" 
+                                onclick="toggleWishlist({{ p.id }}, this)" title="Save to Wishlist">
+                            <i class="fa-{{ 'solid' if p.id in session_wishlist else 'regular' }} fa-heart"></i>
+                        </button>
+                        <button class="quick-action-btn" onclick="openQuickView({{ p.id }})" title="Quick View">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Card Image -->
+                    <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-card-media">
+                        <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+                    </a>
+
+                    <!-- Card Details -->
+                    <div class="product-card-body">
+                        <span class="product-category-tag">{{ p.category_name }}</span>
+                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-title" title="{{ p.name }}">
+                            {{ p.name }}
+                        </a>
+
+                        <!-- Rating Row -->
+                        <div class="product-rating-row">
+                            <span class="rating-badge">
+                                {{ p.rating }} <i class="fa-solid fa-star"></i>
+                            </span>
+                            <span class="rating-count">({{ p.review_count }})</span>
+                        </div>
+
+                        <!-- Price Row -->
+                        <div class="product-price-row">
+                            <span class="current-price">{{ p.price|currency }}</span>
+                            {% if p.original_price and p.original_price > p.price %}
+                                <span class="original-price">{{ p.original_price|currency }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Color Swatches Preview -->
+                        {% set colors = p.colors|from_json %}
+                        {% if colors %}
+                            <div class="color-swatches-preview">
+                                {% for col in colors[:4] %}
+                                    <span class="swatch-circle" style="background-color: {{ col.hex }};" title="{{ col.name }}"></span>
+                                {% endfor %}
+                                {% if colors|length > 4 %}
+                                    <span class="swatch-more">+{{ colors|length - 4 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Card Action Buttons -->
+                        <div class="product-card-actions">
+                            <button class="btn-add-cart" onclick="addToCart({{ p.id }}, 1, '', '', true)">
+                                <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                            </button>
+                            <button class="btn-buy-now" onclick="buyNow({{ p.id }}, 1, '', '')">
+                                <i class="fa-solid fa-bolt"></i> Buy Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty Search / Filter State -->
+            <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center; border: 1px solid var(--border-color);">
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 3.5rem; color: #cbd5e1; margin-bottom: 1.25rem;"></i>
+                <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem;">No Matching Products Found</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
+                    We couldn't find any items matching your filters or search criteria. Try clearing some filters or searching with different keywords.
+                </p>
+                <a href="{{ url_for('products') }}" class="hero-btn" style="padding: 0.75rem 1.75rem;">
+                    Browse All Products
+                </a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+</div>
+
+{% block extra_scripts %}
+<script>
+function applySort(sortVal) {
+    const form = document.getElementById('catalog-filters-form');
+    if (form) {
+        document.getElementById('sidebar-sort-hidden').value = sortVal;
+        form.submit();
+    } else {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', sortVal);
+        window.location.href = url.toString();
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

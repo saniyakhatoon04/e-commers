@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist - ApexMart{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+    <div class="section-header" style="margin-bottom: 2rem;">
+        <h1 class="section-title"><i class="fa-solid fa-heart" style="color: #ef4444;"></i> My Wishlist ({{ products|length }} items)</h1>
+        <a href="{{ url_for('products') }}" style="color: var(--primary-color); font-weight: 700; font-size: 0.95rem;">
+            ← Continue Shopping
+        </a>
+    </div>
+
+    {% if products %}
+    <div class="products-grid" style="margin-bottom: 3.5rem;">
+        {% for p in products %}
+        <div class="product-card" data-product-id="{{ p.id }}">
+            <div class="card-badges">
+                {% if p.discount_percent and p.discount_percent > 0 %}
+                    <span class="badge-discount">{{ p.discount_percent }}% OFF</span>
+                {% endif %}
+            </div>
+
+            <!-- Remove from wishlist button -->
+            <div class="card-quick-actions">
+                <button class="quick-action-btn active-wishlist" onclick="toggleWishlist({{ p.id }}, this)" title="Remove from Wishlist">
+                    <i class="fa-solid fa-heart"></i>
+                </button>
+            </div>
+
+            <!-- Image -->
+            <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-card-media">
+                <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+            </a>
+
+            <!-- Body -->
+            <div class="product-card-body">
+                <span class="product-category-tag">{{ p.category_name }}</span>
+                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-title">{{ p.name }}</a>
+
+                <div class="product-rating-row">
+                    <span class="rating-badge">{{ p.rating }} <i class="fa-solid fa-star"></i></span>
+                    <span class="rating-count">({{ p.review_count }})</span>
+                </div>
+
+                <div class="product-price-row">
+                    <span class="current-price">{{ p.price|currency }}</span>
+                    {% if p.original_price and p.original_price > p.price %}
+                        <span class="original-price">{{ p.original_price|currency }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="product-card-actions">
+                    <button class="btn-add-cart" onclick="moveToCartFromWishlist({{ p.id }}, this)">
+                        <i class="fa-solid fa-cart-shopping"></i> Move to Cart
+                    </button>
+                    <button class="btn-buy-now" onclick="buyNow({{ p.id }}, 1, '', '')">
+                        <i class="fa-solid fa-bolt"></i> Buy Now
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty Wishlist State -->
+    <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 5rem 2rem; text-align: center; border: 1px solid var(--border-color); margin-bottom: 4rem;">
+        <i class="fa-regular fa-heart" style="font-size: 4.5rem; color: #cbd5e1; margin-bottom: 1.5rem;"></i>
+        <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.65rem;">Your Wishlist is Empty</h2>
+        <p style="color: var(--text-muted); font-size: 1rem; max-width: 480px; margin: 0 auto 2rem;">
+            Save your favorite items here while browsing so you can easily find them later or purchase when on sale!
+        </p>
+        <a href="{{ url_for('products') }}" class="hero-btn" style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+            <i class="fa-solid fa-bag-shopping"></i> Explore Popular Products
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+{% block extra_scripts %}
+<script>
+async function moveToCartFromWishlist(productId, btn) {
+    const success = await addToCart(productId, 1, '', '', true);
+    if (success) {
+        // Toggle off wishlist
+        toggleWishlist(productId, btn.closest('.product-card').querySelector('.quick-action-btn'));
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

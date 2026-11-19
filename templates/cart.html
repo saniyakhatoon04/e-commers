@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - ApexMart{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+    <div class="section-header" style="margin-bottom: 1.5rem;">
+        <h1 class="section-title"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart ({{ cart_count }} items)</h1>
+        <a href="{{ url_for('products') }}" style="color: var(--primary-color); font-weight: 700; font-size: 0.95rem;">
+            ← Continue Shopping
+        </a>
+    </div>
+
+    {% if cart_items %}
+    <div class="cart-page-layout">
+        
+        <!-- Left: Cart Items List -->
+        <div class="cart-items-card">
+            <div class="cart-table-header">
+                <div>Product Details</div>
+                <div style="text-align: center;">Price</div>
+                <div style="text-align: center;">Quantity</div>
+                <div style="text-align: right;">Subtotal</div>
+                <div></div>
+            </div>
+
+            <div class="cart-items-container">
+                {% for item in cart_items %}
+                <div class="cart-item-row" id="cart-row-{{ loop.index }}">
+                    <!-- Product info -->
+                    <div class="cart-product-info">
+                        <img src="{{ item.image_url }}" alt="{{ item.name }}" class="cart-thumb">
+                        <div>
+                            <a href="{{ url_for('product_detail', product_id=item.product_id) }}" class="cart-item-title">
+                                {{ item.name }}
+                            </a>
+                            <div class="cart-item-variants">
+                                {% if item.size %}<span>Option: <strong>{{ item.size }}</strong></span>{% endif %}
+                                {% if item.color %}<span style="margin-left: 8px;">Color: <strong>{{ item.color }}</strong></span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price -->
+                    <div style="text-align: center; font-weight: 600; color: #374151;">
+                        {{ item.price|currency }}
+                    </div>
+
+                    <!-- Quantity Stepper -->
+                    <div style="display: flex; justify-content: center;">
+                        <div class="stepper-box">
+                            <button class="stepper-btn" onclick="updateCartQuantity('{{ item.item_key }}', {{ item.quantity - 1 }})">-</button>
+                            <input type="text" class="stepper-input" value="{{ item.quantity }}" readonly>
+                            <button class="stepper-btn" onclick="updateCartQuantity('{{ item.item_key }}', {{ item.quantity + 1 }})">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div style="text-align: right; font-weight: 800; color: #111827; font-size: 1.05rem;">
+                        {{ item.subtotal|currency }}
+                    </div>
+
+                    <!-- Remove -->
+                    <div style="text-align: right;">
+                        <button class="cart-item-remove-btn" onclick="removeFromCart('{{ item.item_key }}')" title="Remove Item">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+                <a href="{{ url_for('products') }}" class="btn-add-cart" style="padding: 0.65rem 1.25rem;">
+                    <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+                </a>
+                <button onclick="clearAllCart()" style="background: none; border: none; color: #ef4444; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
+                    <i class="fa-solid fa-trash"></i> Clear Shopping Cart
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Order Summary Card -->
+        <div class="order-summary-card">
+            <h2 class="summary-title">Order Summary</h2>
+
+            <div class="summary-row">
+                <span>Items Subtotal:</span>
+                <strong id="summary-subtotal">{{ totals.subtotal|currency }}</strong>
+            </div>
+
+            {% if totals.discount > 0 %}
+            <div class="summary-row text-discount">
+                <span>Coupon Discount ({{ totals.coupon }}):</span>
+                <span>-{{ totals.discount|currency }}</span>
+            </div>
+            {% endif %}
+
+            <div class="summary-row">
+                <span>Shipping & Handling:</span>
+                <span>
+                    {% if totals.shipping == 0 %}
+                        <span class="text-discount">FREE</span>
+                    {% else %}
+                        {{ totals.shipping|currency }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="summary-row">
+                <span>Estimated Sales Tax (8%):</span>
+                <span>{{ totals.tax|currency }}</span>
+            </div>
+
+            <div class="summary-row total-row">
+                <span>Total Amount:</span>
+                <span style="color: var(--secondary-color);">{{ totals.total|currency }}</span>
+            </div>
+
+            <!-- Coupon Input -->
+            <div style="margin-bottom: 0.4rem; font-weight: 700; font-size: 0.88rem;">Have a Promo Code?</div>
+            <div class="coupon-input-box">
+                <input type="text" id="coupon-code-input" class="coupon-input" 
+                       placeholder="e.g. SAVE10" value="{{ applied_coupon|default('') }}">
+                <button type="button" class="coupon-btn" onclick="applyCoupon()">Apply</button>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                Try coupons: <strong>SAVE10</strong> (10% off), <strong>WELCOME20</strong> (20% off), or <strong>FREESHIP</strong>
+            </div>
+
+            <!-- Checkout CTA -->
+            <a href="{{ url_for('checkout') }}" class="btn-checkout-primary">
+                Proceed to Checkout <i class="fa-solid fa-lock" style="margin-left: 0.5rem; font-size: 0.9rem;"></i>
+            </a>
+
+            <!-- Assurance -->
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-truck-fast" style="color: var(--primary-color);"></i> Free standard delivery on orders over $50
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--success-color);"></i> Safe & encrypted 256-bit checkout
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% else %}
+    <!-- Empty Cart State -->
+    <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 5rem 2rem; text-align: center; border: 1px solid var(--border-color); margin-bottom: 4rem;">
+        <i class="fa-solid fa-cart-arrow-down" style="font-size: 4.5rem; color: #cbd5e1; margin-bottom: 1.5rem;"></i>
+        <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.65rem;">Your Shopping Cart is Empty</h2>
+        <p style="color: var(--text-muted); font-size: 1rem; max-width: 480px; margin: 0 auto 2rem;">
+            You have no items in your shopping cart. Discover our latest collections, high-tech electronics, and trending apparel today!
+        </p>
+        <a href="{{ url_for('products') }}" class="hero-btn" style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+            <i class="fa-solid fa-bag-shopping"></i> Start Shopping Now
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+{% block extra_scripts %}
+<script>
+async function clearAllCart() {
+    if (!confirm('Are you sure you want to clear your shopping cart?')) return;
+    try {
+        const res = await fetch('/api/cart/clear', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Secure Checkout - ApexMart{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 2rem;">
+
+    <div class="section-header" style="margin-bottom: 2rem;">
+        <h1 class="section-title"><i class="fa-solid fa-lock" style="color: var(--success-color);"></i> Secure Checkout</h1>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            <i class="fa-solid fa-shield-halved" style="color: var(--primary-color);"></i> 256-Bit SSL Encrypted
+        </div>
+    </div>
+
+    <form action="{{ url_for('checkout') }}" method="POST" id="checkout-form">
+        <div class="checkout-grid">
+            
+            <!-- Left: Checkout Steps & Customer Details -->
+            <div>
+                <!-- Step 1: Contact Information -->
+                <div class="checkout-card">
+                    <div class="checkout-step-header">
+                        <span class="step-number">1</span>
+                        <h2 class="checkout-step-title">Contact Information</h2>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_name">Full Name *</label>
+                            <input type="text" id="customer_name" name="customer_name" class="form-control" 
+                                   placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_email">Email Address *</label>
+                            <input type="email" id="customer_email" name="customer_email" class="form-control" 
+                                   placeholder="e.g. john@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer_phone">Phone Number *</label>
+                        <input type="tel" id="customer_phone" name="customer_phone" class="form-control" 
+                               placeholder="e.g. +1 (555) 234-5678" required>
+                    </div>
+                </div>
+
+                <!-- Step 2: Shipping Address -->
+                <div class="checkout-card">
+                    <div class="checkout-step-header">
+                        <span class="step-number">2</span>
+                        <h2 class="checkout-step-title">Shipping Address</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Street Address *</label>
+                        <input type="text" id="address" name="address" class="form-control" 
+                               placeholder="e.g. 742 Evergreen Terrace, Apt 4B" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City *</label>
+                            <input type="text" id="city" name="city" class="form-control" 
+                                   placeholder="e.g. New York" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State / Province *</label>
+                            <input type="text" id="state" name="state" class="form-control" 
+                                   placeholder="e.g. NY" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="zip_code">ZIP / Postal Code *</label>
+                            <input type="text" id="zip_code" name="zip_code" class="form-control" 
+                                   placeholder="e.g. 10001" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="country">Country</label>
+                            <select id="country" name="country" class="form-control">
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="IN">India</option>
+                                <option value="AU">Australia</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment Method -->
+                <div class="checkout-card">
+                    <div class="checkout-step-header">
+                        <span class="step-number">3</span>
+                        <h2 class="checkout-step-title">Select Payment Method</h2>
+                    </div>
+
+                    <div class="payment-method-selector">
+                        <label class="payment-method-card active" onclick="selectPayment(this, 'Credit/Debit Card')">
+                            <div class="payment-method-left">
+                                <input type="radio" name="payment_method" value="Credit/Debit Card" checked style="accent-color: var(--primary-color);">
+                                <span>Credit / Debit Card</span>
+                            </div>
+                            <div class="payment-method-icons">
+                                <i class="fa-brands fa-cc-visa"></i>
+                                <i class="fa-brands fa-cc-mastercard"></i>
+                                <i class="fa-brands fa-cc-amex"></i>
+                            </div>
+                        </label>
+
+                        <!-- Simulated Card Details form -->
+                        <div id="card-details-box" style="padding: 1.25rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-top: -0.25rem; margin-bottom: 0.5rem;">
+                            <div class="form-group">
+                                <label style="font-size: 0.82rem;">Card Number</label>
+                                <input type="text" class="form-control" placeholder="•••• •••• •••• 4242" value="4242 4242 4242 4242">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label style="font-size: 0.82rem;">Expiry Date</label>
+                                    <input type="text" class="form-control" placeholder="MM/YY" value="12/28">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 0.82rem;">CVV / CVC</label>
+                                    <input type="password" class="form-control" placeholder="•••" value="123" maxlength="4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="payment-method-card" onclick="selectPayment(this, 'UPI / Net Banking')">
+                            <div class="payment-method-left">
+                                <input type="radio" name="payment_method" value="UPI / Net Banking" style="accent-color: var(--primary-color);">
+                                <span>UPI / Net Banking / PayPal</span>
+                            </div>
+                            <div class="payment-method-icons">
+                                <i class="fa-brands fa-paypal"></i>
+                                <i class="fa-solid fa-qrcode"></i>
+                            </div>
+                        </label>
+
+                        <label class="payment-method-card" onclick="selectPayment(this, 'Cash on Delivery')">
+                            <div class="payment-method-left">
+                                <input type="radio" name="payment_method" value="Cash on Delivery" style="accent-color: var(--primary-color);">
+                                <span>Cash on Delivery (Pay on Arrival)</span>
+                            </div>
+                            <div class="payment-method-icons">
+                                <i class="fa-solid fa-money-bill-wave" style="color: var(--success-color);"></i>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right: Order Summary Sticky Box -->
+            <div class="order-summary-card">
+                <h2 class="summary-title">Order Overview ({{ cart_items|length }} items)</h2>
+
+                <!-- Mini Item List -->
+                <div style="max-height: 260px; overflow-y: auto; margin-bottom: 1.25rem; padding-right: 0.5rem;">
+                    {% for item in cart_items %}
+                    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.85rem; padding-bottom: 0.85rem; border-bottom: 1px solid #f1f5f9;">
+                        <img src="{{ item.image_url }}" alt="{{ item.name }}" style="width: 45px; height: 45px; object-fit: contain; border-radius: 4px; background: #f8fafc; border: 1px solid var(--border-color);">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.85rem; font-weight: 700; line-height: 1.25;">{{ item.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                Qty: {{ item.quantity }} {% if item.size %}| {{ item.size }}{% endif %}
+                            </div>
+                        </div>
+                        <div style="font-size: 0.9rem; font-weight: 700;">
+                            {{ item.subtotal|currency }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <strong>{{ totals.subtotal|currency }}</strong>
+                </div>
+
+                {% if totals.discount > 0 %}
+                <div class="summary-row text-discount">
+                    <span>Discount ({{ totals.coupon }}):</span>
+                    <span>-{{ totals.discount|currency }}</span>
+                </div>
+                {% endif %}
+
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span>
+                        {% if totals.shipping == 0 %}
+                            <span class="text-discount">FREE</span>
+                        {% else %}
+                            {{ totals.shipping|currency }}
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="summary-row">
+                    <span>Taxes (8%):</span>
+                    <span>{{ totals.tax|currency }}</span>
+                </div>
+
+                <div class="summary-row total-row">
+                    <span>Grand Total:</span>
+                    <span style="color: var(--secondary-color);">{{ totals.total|currency }}</span>
+                </div>
+
+                <button type="submit" class="btn-checkout-primary" id="place-order-btn">
+                    Place Order ({{ totals.total|currency }})
+                </button>
+
+                <div style="margin-top: 1.25rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-lock" style="color: var(--success-color);"></i>
+                    By placing your order, you agree to ApexMart's Privacy Policy & Terms of Purchase.
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+{% block extra_scripts %}
+<script>
+function selectPayment(cardElement, method) {
+    document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('active'));
+    cardElement.classList.add('active');
+    const radio = cardElement.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+
+    const cardDetails = document.getElementById('card-details-box');
+    if (cardDetails) {
+        if (method === 'Credit/Debit Card') {
+            cardDetails.style.display = 'block';
+        } else {
+            cardDetails.style.display = 'none';
+        }
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}
